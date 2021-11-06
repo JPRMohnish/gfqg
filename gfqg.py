@@ -1,7 +1,7 @@
 import string
 import random
-import nltk # 3.4.1
-from rake_nltk import Rake # 1.0.4
+import nltk  # 3.4.1
+from rake_nltk import Rake  # 1.0.4
 from nltk.tokenize.treebank import TreebankWordDetokenizer as TWD
 from nltk.corpus import stopwords
 
@@ -9,6 +9,7 @@ from nltk.corpus import stopwords
 nltk.download("averaged_perceptron_tagger")
 nltk.download("punkt")
 nltk.download("stopwords")
+
 
 class Document:
     def __init__(self, raw_string):
@@ -60,6 +61,7 @@ class Document:
 
         return self._raw_string
 
+
 class Sentence:
     def __init__(self, raw_string):
         """
@@ -92,7 +94,8 @@ class Sentence:
         self._questions = dict()
 
         # all possible words that can be used as answers
-        clean_words = [word.lower() for word in self._words if self._is_clean(word)]
+        clean_words = [word.lower()
+                       for word in self._words if self._is_clean(word)]
         dt = TWD()
 
         for word in clean_words:
@@ -130,7 +133,7 @@ class Sentence:
         # adj and noun only
         if not word_pos in CURRENT:
             return False
-        
+
         # removes words like "use" (NN), but allows abbreviations
         if ((word_pos == "NN" or word_pos == "JJ") and len(word) <= 4) or (word_pos == "NNS" and len(word) <= 5):
             if word.islower() or word[:1].isupper() and word[1:].islower():
@@ -149,7 +152,7 @@ class Sentence:
         Keywords will be all lowercase
         """
 
-        r = Rake(max_length = 1)
+        r = Rake(max_length=1)
         r.extract_keywords_from_text(self._raw_string)
         self._keywords = r.get_ranked_phrases()
 

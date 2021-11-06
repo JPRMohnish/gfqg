@@ -5,13 +5,26 @@ import os
 import datetime
 from colorama import init  # 0.4.1
 from colorama import Fore
+from wikipedia.wikipedia import summary
 from gfqg import Document
 from services.text_crawler import Crawler
+from services.text_summarizer import ExtractiveSummarizer
+from services.revision_email import RevisionEmails
 # create flask app
 app = Flask(__name__)
 
 # init colorama, reset coloring on each print
 init(autoreset=True)
+
+sentenceToQuestionMultiplier = 2.0
+SUMMARY_THRESHOLD = 5000
+
+
+def summarize(raw_data, max_questions):
+    summarizer = ExtractiveSummarizer(raw_data)
+    summary = summarizer.summarize(
+        max_questions * sentenceToQuestionMultiplier)
+    return summary
 
 
 @app.after_request
@@ -38,7 +51,13 @@ def generate():
 
     # make questions
     raw_data = str(request.args.get("data"))
-    questions = Document(raw_data).format_questions()
+    max_questions = float(request.args.get('max_questions'))
+    summary = raw_data
+
+    if len(raw_data) > SUMMARY_THRESHOLD:
+        summary = summarize(raw_data, max_questions)
+
+    questions = Document(summary).format_questions()
     log(questions)
     return jsonify(questions)
 
@@ -47,10 +66,38 @@ def generate():
 def generate_from_keyword():
     log('Received request for keyword to questions generation')
     keyword = str(request.args.get('query'))
+    max_questions = float(request.args.get('max_questions'))
+
     wiki_crawler = Crawler(keyword=keyword)
     wiki_crawler.crawl_wikepedia()
-    wiki_crawler.print_data()
-    return jsonify(wiki_crawler.data)
+    summary = summarize(wiki_crawler.data, max_questions)
+
+    questions = Document(summary).format_questions()
+    log(questions)
+    return jsonify(questions)
+
+
+@app.route('/revisionEmail', methods=["GET"])
+def revisionEmail():
+    revision_data = []
+    revision_data.append({
+        'question': '...__....',
+        'wrong_answer': '<3',
+        'correct_answer': '69'
+    })
+
+    revision_plan = {
+        'year': 2021,
+        'month': 11,
+        'date': 6
+    }
+    # we need to run this as a separate thread as it is blocking so
+    # we use multi threading concept here interesting thing to code up tomorrow.
+
+    mailer = RevisionEmails()
+    message = mailer.schedule_email(
+        revision_plan, revision_data, 'monis.satidasani1@gmail.com', 'Please Revise these problems :(')
+    return message
 
 
 def log(*args, session_id=None):
