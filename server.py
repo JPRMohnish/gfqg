@@ -1,4 +1,4 @@
-from flask import Flask  # 1.0.2
+from flask import Flask, json  # 1.0.2
 from flask import request
 from flask import jsonify
 import os
@@ -10,14 +10,22 @@ from gfqg import Document
 from services.text_crawler import Crawler
 from services.text_summarizer import ExtractiveSummarizer
 from services.revision_email import RevisionEmails
+import schedule
+import threading
+import time
 # create flask app
 app = Flask(__name__)
-
 # init colorama, reset coloring on each print
 init(autoreset=True)
 
 sentenceToQuestionMultiplier = 2.0
 SUMMARY_THRESHOLD = 5000
+
+
+def background_email_scheduler():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 def summarize(raw_data, max_questions):
@@ -77,26 +85,17 @@ def generate_from_keyword():
     return jsonify(questions)
 
 
-@app.route('/revisionEmail', methods=["GET"])
+@app.route('/revisionEmail', methods=["POST"])
 def revisionEmail():
-    revision_data = []
-    revision_data.append({
-        'question': '...__....',
-        'wrong_answer': '<3',
-        'correct_answer': '69'
-    })
-
-    revision_plan = {
-        'year': 2021,
-        'month': 11,
-        'date': 6
-    }
-    # we need to run this as a separate thread as it is blocking so
-    # we use multi threading concept here interesting thing to code up tomorrow.
-
-    mailer = RevisionEmails()
+    revision_data = list(request.json.get('question_data'))
+    revision_plan = dict(request.json.get('revision_plan'))
+    revision_email = str(request.json.get('email'))
+    revision_subject = 'Please Revise these problems :('
+    print(revision_data)
+    print(revision_plan)
+    mailer = RevisionEmails(schedule=schedule)
     message = mailer.schedule_email(
-        revision_plan, revision_data, 'monis.satidasani1@gmail.com', 'Please Revise these problems :(')
+        revision_plan, revision_data, revision_email, revision_subject)
     return message
 
 
@@ -120,4 +119,6 @@ def log(*args, session_id=None):
 if __name__ == "__main__":
     # server start
     port = int(os.environ.get("PORT", 5000))
+    t = threading.Thread(target=background_email_scheduler)
+    t.start()
     app.run(host="0.0.0.0", port=port)

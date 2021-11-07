@@ -4,10 +4,7 @@ import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import sys
-from datetime import date
-import time
 from flask.helpers import send_file
-import schedule
 
 
 def send_email(TO, Body, Subject):
@@ -41,7 +38,8 @@ def send_email(TO, Body, Subject):
 
 
 class RevisionEmails:
-    def __init__(self):
+    def __init__(self, schedule):
+        self.schedule = schedule
         pass
 
     def format_html(self, content):
@@ -55,9 +53,26 @@ class RevisionEmails:
 
     def schedule_email(self, plan, data, TO, Subject):
         data = self.format_html(data)
-        schedule.every(1).minutes.do(
-            send_email, TO=TO, Body=data, Subject=Subject)
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
+        if plan['day'] == 'monday':
+            self.schedule.every().monday.at(plan['time']).do(
+                send_email, TO=TO, Body=data, Subject=Subject)
+        elif plan['day'] == 'tuesday':
+            self.schedule.every().tuesday.at(plan['time']).do(
+                send_email, TO=TO, Body=data, Subject=Subject)
+        elif plan['day'] == 'wednesday':
+            self.schedule.every().wednesday.at(plan['time']).do(
+                send_email, TO=TO, Body=data, Subject=Subject)
+        elif plan['day'] == 'thursday':
+            self.schedule.every().thursday.at(plan['time']).do(
+                send_email, TO=TO, Body=data, Subject=Subject)
+        elif plan['day'] == 'friday':
+            self.schedule.every().friday.at(plan['time']).do(
+                send_email, TO=TO, Body=data, Subject=Subject)
+        elif plan['day'] == 'saturday':
+            self.schedule.every().saturday.at(plan['time']).do(
+                send_email, TO=TO, Body=data, Subject=Subject)
+        elif plan['day'] == 'sunday':
+            self.schedule.every().sunday.at(plan['time']).do(
+                send_email, TO=TO, Body=data, Subject=Subject)
         return 'email scheduled successfully'
+        # bug here we need to make this code asynchronous in python.
