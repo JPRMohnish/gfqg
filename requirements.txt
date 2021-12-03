@@ -4,3 +4,4 @@ colorama==0.4.1
 rake_nltk==1.0.4
 wikipedia==1.4.0
 apscheduler==3.8.1
+schedule==1.1.0
