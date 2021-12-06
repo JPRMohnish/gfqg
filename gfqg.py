@@ -152,7 +152,7 @@ class Sentence:
         Keywords will be all lowercase
         """
 
-        r = Rake(max_length=1)
+        r = Rake(stopwords= stopwords.words("english") ,max_length=1)
         r.extract_keywords_from_text(self._raw_string)
         self._keywords = r.get_ranked_phrases()
 

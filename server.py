@@ -5,6 +5,7 @@ import os
 import datetime
 from colorama import init  # 0.4.1
 from colorama import Fore
+from nltk import data
 from wikipedia.wikipedia import summary
 from gfqg import Document
 from services.text_crawler import Crawler
@@ -75,13 +76,30 @@ def generate_from_keyword():
     log('Received request for keyword to questions generation')
     keyword = str(request.args.get('query'))
     max_questions = float(request.args.get('max_questions'))
-
+    questions = []
     wiki_crawler = Crawler(keyword=keyword)
-    wiki_crawler.crawl_wikepedia()
-    summary = summarize(wiki_crawler.data, max_questions)
+    data1 = wiki_crawler.wiki_summary()
+    data2 = wiki_crawler.crawl_wikepedia()
+    q = min(1, max_questions / (len(data2)))
+    for d in data1:
+        try:
+            summary = summarize(d, max_questions)
+            quests = Document(summary).format_questions()
+            if len(quests) >= 1:
+                questions += quests
+        except:
+            pass
+    
+    for d in data2:
+        try:
+            summary = summarize(d, q)
+            quests = Document(summary).format_questions()
+            if len(quests) >= 1:
+                questions += quests
+        except:
+            pass
 
-    questions = Document(summary).format_questions()
-    log(questions)
+    # log(questions)
     return jsonify(questions)
 
 

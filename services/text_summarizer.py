@@ -10,7 +10,6 @@ nltk.download('punkt')
 
 def clean_data(data):
     data = data.split(". ")
-    print(len(data))
     sentences = []
     for sentence in data:
         sentence = re.sub('[^a-zA-Z0-9]', ' ', str(sentence))
