@@ -33,6 +33,18 @@ export default function Inputs(props) {
   const [email, setEmail] = useState("abc@gmail.com");
   const [day, setDay] = useState("monday");
   const [time, setTime] = useState("00:00");
+  const findOptions = async (word) => {
+    return new Promise(async (resolve, reject) => {
+      fetch(`https://api.datamuse.com/words?ml=${word}`)
+        .then((res) => res.json())
+        .then(async (data) => {
+          resolve([data[0].word, data[1].word, data[2].word, data[3].word]);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
+  };
   const fetchQuestion = () => {
     setLoading(true);
     fetch(
@@ -42,11 +54,12 @@ export default function Inputs(props) {
       .then(async (data) => {
         let questions = {};
         data = await Promise.all(
-          data.map((d, index) => {
+          data.map(async (d, index) => {
             questions[index] = {
               question: d.pop(),
-              answers: d.map((str) => str.toLowerCase()),
-              selected: Array.from({ length: d.length }, (v, k) => "null"),
+              answers: d[0],
+              selected: "null",
+              options: await findOptions(d[0]),
             };
             return d;
           })
@@ -157,13 +170,14 @@ export default function Inputs(props) {
                     Q.{1 + parseInt(index)}. {questions[index].question}
                   </p>
                   <br />
+                  <p>1. {questions[index].options[0]}</p>{" "}
+                  <p>2. {questions[index].options[1]}</p>{" "}
+                  <p>3. {questions[index].options[2]}</p>{" "}
+                  <p>4. {questions[index].options[3]}</p> <br />
                   <Input
                     onChange={(e) => {
                       let qna = questions;
-                      qna[index].selected = e.target.value
-                        .toLowerCase()
-                        .split(",");
-                      setQuestions(qna);
+                      qna[index].selected = e.target.value.toLowerCase();
                     }}
                     placeholder={"Enter Your answer."}
                     inputProps={ariaLabel}
