@@ -18,7 +18,25 @@ export default function Inputs(props) {
     "saturday",
     "sunday",
   ];
+  function shuffle(array) {
+    let currentIndex = array.length,
+      randomIndex;
 
+    // While there remain elements to shuffle...
+    while (currentIndex != 0) {
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex],
+        array[currentIndex],
+      ];
+    }
+
+    return array;
+  }
   for (let i = 0; i <= 21; i++) {
     let x = i.toString();
     if (x.length < 2) x = "0" + x;
@@ -38,7 +56,7 @@ export default function Inputs(props) {
       fetch(`https://api.datamuse.com/words?ml=${word}`)
         .then((res) => res.json())
         .then(async (data) => {
-          resolve([data[0].word, data[1].word, data[2].word, data[3].word]);
+          resolve([data[0].word, data[1].word, data[2].word]);
         })
         .catch((err) => {
           console.log(err);
@@ -59,7 +77,7 @@ export default function Inputs(props) {
               question: d.pop(),
               answers: d[0],
               selected: "null",
-              options: await findOptions(d[0]),
+              options: shuffle([...(await findOptions(d[0])), d[0]]),
             };
             return d;
           })
